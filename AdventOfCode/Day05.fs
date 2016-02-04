@@ -2,7 +2,7 @@
 
 let vowels = "aeiou" |> Set.ofSeq
 let isVowel x = Set.contains x vowels
-let getTrueCount = Seq.map (fun x -> if x then 1 else 0) >> Seq.sum
+let getTrueCount = Seq.sumBy (function | true -> 1 | false -> 0)
 let vowelCount (text : string) = text |> Seq.map isVowel |> getTrueCount
 
 let hasAtLeast n p =
