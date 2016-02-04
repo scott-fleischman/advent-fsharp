@@ -5,6 +5,12 @@ let isVowel x = Set.contains x vowels
 let getTrueCount = Seq.map (fun x -> if x then 1 else 0) >> Seq.sum
 let vowelCount (text : string) = text |> Seq.map isVowel |> getTrueCount
 
+let hasAtLeast n p =
+    Seq.scan (fun s x -> s + if p x then 1 else 0) 0
+    >> Seq.tryPick (fun x -> if x >= n then Some () else None)
+    >> Option.isSome
+let has3Vowels = hasAtLeast 3 isVowel
+
 let isDoubleLetter (x, y) = x = y
 
 let invalidPairs = set ["ab"; "cd"; "pq"; "xy"]
@@ -13,7 +19,7 @@ let isInvalidPair (x, y) = Set.contains (new string([| x; y |])) invalidPairs
 let matchesPairPredicate predicate = Seq.pairwise >> Seq.exists predicate
 
 let isNice text =
-    vowelCount text >= 3 &&
+    has3Vowels text &&
     matchesPairPredicate isDoubleLetter text &&
     not <| matchesPairPredicate isInvalidPair text
 
