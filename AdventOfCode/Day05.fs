@@ -10,10 +10,7 @@ let isDoubleLetter (x, y) = x = y
 let invalidPairs = set ["ab"; "cd"; "pq"; "xy"]
 let isInvalidPair (x, y) = Set.contains (new string([| x; y |])) invalidPairs 
 
-let matchesPairPredicate predicate text =
-    text
-    |> Seq.pairwise
-    |> Seq.exists predicate
+let matchesPairPredicate predicate = Seq.pairwise >> Seq.exists predicate
 
 let isNice text =
     vowelCount text >= 3 &&
