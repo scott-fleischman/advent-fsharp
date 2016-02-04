@@ -5,28 +5,20 @@ let isVowel x = Set.contains x vowels
 let getTrueCount = Seq.map (fun x -> if x then 1 else 0) >> Seq.sum
 let vowelCount (text : string) = text |> Seq.map isVowel |> getTrueCount
 
-let isDoubleLetter = (=)
+let isDoubleLetter (x, y) = x = y
 
-let invalidTwoLetters = set ["ab"; "cd"; "pq"; "xy"]
-let isInvalidTwoLetter x y = Set.contains (new string([| x; y |])) invalidTwoLetters 
+let invalidPairs = set ["ab"; "cd"; "pq"; "xy"]
+let isInvalidPair (x, y) = Set.contains (new string([| x; y |])) invalidPairs 
 
-let matchesTwoLetterPredicateContext predicate context currentLetter =
-    match context with
-    | (_, true) -> (None, true)
-    | (Some previous, false) ->
-        if predicate previous currentLetter
-        then (None, true)
-        else (Some currentLetter, false)
-    | (None, false) -> (Some currentLetter, false)
-let matchesTwoLetterPredicate predicate text =
+let matchesPairPredicate predicate text =
     text
-    |> Seq.fold (matchesTwoLetterPredicateContext predicate) (None, false)
-    |> snd
+    |> Seq.pairwise
+    |> Seq.exists predicate
 
 let isNice text =
     vowelCount text >= 3 &&
-    matchesTwoLetterPredicate isDoubleLetter text &&
-    not <| matchesTwoLetterPredicate isInvalidTwoLetter text
+    matchesPairPredicate isDoubleLetter text &&
+    not <| matchesPairPredicate isInvalidPair text
 
 let inputLines = System.IO.File.ReadAllLines "Day05Input.txt"
 
