@@ -11,7 +11,7 @@ let hasDoublePair =
         | (IsMatch, _) -> IsMatch
         | (Unmatched map, (pairIndex, text)) -> nextState map pairIndex text
     Seq.pairwise
-    >> Seq.mapi (fun index pair -> match pair with (x, y) -> (index, new string ([| x; y |])))
+    >> Seq.mapi (fun index (x, y) -> (index, new string ([| x; y |])))
     >> Seq.scan updateState (Unmatched Map.empty)
     >> Seq.exists (function | IsMatch -> true | Unmatched _ -> false)
 
