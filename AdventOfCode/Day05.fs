@@ -10,15 +10,15 @@ let has3Vowels =
     let isVowel x = Set.contains x vowels
     hasAtLeast 3 isVowel
 
-let matchesPairPredicate predicate = Seq.pairwise >> Seq.exists predicate
-let hasDoubleLetter = matchesPairPredicate (function | (x, y) -> x = y)
+let existsPair predicate = Seq.pairwise >> Seq.exists predicate
+let hasDoubleLetter = existsPair (function | (x, y) -> x = y)
 
 let hasInvalidPair =
     let isInvalidPair (x, y) =
         let invalidPairs = set ["ab"; "cd"; "pq"; "xy"]
         let pairString = System.String [| x; y |]
         Set.contains pairString invalidPairs
-    not << matchesPairPredicate isInvalidPair
+    not << existsPair isInvalidPair
 
 let isNice = Utility.andAll [has3Vowels; hasDoubleLetter; hasInvalidPair]
 
