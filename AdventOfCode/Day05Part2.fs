@@ -11,16 +11,18 @@ let hasDoublePair =
         | (IsMatch, _) -> IsMatch
         | (Unmatched map, (pairIndex, text)) -> nextState map pairIndex text
     Seq.pairwise
-    >> Seq.mapi (fun index (x, y) -> (index, new string ([| x; y |])))
+    >> Seq.mapi (fun index (x, y) -> (index, System.String [| x; y |]))
     >> Seq.scan updateState (Unmatched Map.empty)
     >> Seq.exists (function | IsMatch -> true | Unmatched _ -> false)
 
 let hasRepeatBetween =
     Seq.windowed 3
-    >> Seq.map (fun x -> x.[0] = x.[2])
-    >> Seq.exists id
+    >> Seq.exists (fun x -> x.[0] = x.[2])
 
 let isNice = Utility.andAll [hasDoublePair; hasRepeatBetween]
 
 let inputLines = System.IO.File.ReadAllLines "Day05Input.txt"
-let niceTotal = inputLines |> Seq.map isNice |> Utility.getTrueCount
+let niceTotal =
+    inputLines
+    |> Seq.filter isNice
+    |> Seq.length
