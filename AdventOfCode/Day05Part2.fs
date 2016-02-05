@@ -5,7 +5,7 @@ type PairIndex = PairIndex of int
 type State = IsMatch | Unmatched of Map<Pair, PairIndex>
 let hasDoublePair =
     let areAdjacent (PairIndex x) (PairIndex y) = x + 1 = y
-    let nextState map pairIndex pair =
+    let nextState map (pairIndex, pair) =
         match Map.tryFind pair map with
         | Some previousIndex ->
             if areAdjacent previousIndex pairIndex
@@ -13,9 +13,9 @@ let hasDoublePair =
             else IsMatch
         | None -> Unmatched (Map.add pair pairIndex map)
     let updateState s p =
-        match (s, p) with
-        | (IsMatch, _) -> IsMatch
-        | (Unmatched map, (pairIndex, pair)) -> nextState map pairIndex pair
+        match s with
+        | IsMatch -> IsMatch
+        | Unmatched map -> nextState map p
     Seq.pairwise
     >> Seq.mapi (fun index pair -> (PairIndex index, Pair pair))
     >> Seq.scan updateState (Unmatched Map.empty)
