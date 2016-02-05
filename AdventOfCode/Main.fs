@@ -5,5 +5,5 @@ module Main
 
 [<EntryPoint>]
 let main argv = 
-    printfn "%A" (Day05.niceTotal)
+    printfn "%A" (Day05Part2.niceTotal)
     0 // return an integer exit code

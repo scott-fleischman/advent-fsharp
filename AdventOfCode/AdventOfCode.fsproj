@@ -56,10 +56,12 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <None Include="App.config" />
+    <Compile Include="Utility.fs" />
     <Compile Include="Day05.fs" />
     <Content Include="Day05Input.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Compile Include="Day05Part2.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
