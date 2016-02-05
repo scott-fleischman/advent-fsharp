@@ -11,7 +11,7 @@ let has3Vowels =
     hasAtLeast 3 isVowel
 
 let existsPair predicate = Seq.pairwise >> Seq.exists predicate
-let hasDoubleLetter = existsPair (function | (x, y) -> x = y)
+let hasDoubleLetter = existsPair (fun (x, y) -> x = y)
 
 let hasInvalidPair =
     let isInvalidPair (x, y) =
