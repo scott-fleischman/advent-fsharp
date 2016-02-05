@@ -1,17 +1,23 @@
 ﻿module Day05Part2
 
-type State = IsMatch | Unmatched of Map<string, int>
+type Pair = Pair of char * char
+type PairIndex = PairIndex of int
+type State = IsMatch | Unmatched of Map<Pair, PairIndex>
 let hasDoublePair =
-    let nextState map pairIndex text =
-        match Map.tryFind text map with
-        | Some previousIndex -> if previousIndex + 1 <> pairIndex then IsMatch else Unmatched map
-        | None -> Unmatched (Map.add text pairIndex map)
+    let areAdjacent (PairIndex x) (PairIndex y) = x + 1 = y
+    let nextState map pairIndex pair =
+        match Map.tryFind pair map with
+        | Some previousIndex ->
+            if areAdjacent previousIndex pairIndex
+            then Unmatched map
+            else IsMatch
+        | None -> Unmatched (Map.add pair pairIndex map)
     let updateState s p =
         match (s, p) with
         | (IsMatch, _) -> IsMatch
-        | (Unmatched map, (pairIndex, text)) -> nextState map pairIndex text
+        | (Unmatched map, (pairIndex, pair)) -> nextState map pairIndex pair
     Seq.pairwise
-    >> Seq.mapi (fun index (x, y) -> (index, System.String [| x; y |]))
+    >> Seq.mapi (fun index pair -> (PairIndex index, Pair pair))
     >> Seq.scan updateState (Unmatched Map.empty)
     >> Seq.exists (function | IsMatch -> true | Unmatched _ -> false)
 
