@@ -1,5 +1,6 @@
 ﻿module Day08
 
+open MaybeExpression
 open ParserCombinators
 
 type Escape =
@@ -39,14 +40,16 @@ let stringLiteral =
 let lines = System.IO.File.ReadAllLines "Day08Input.txt"
 let answer =
     let getDifference x =
-        let parseResult = parseAll stringLiteral (Seq.toList x)
-        match parseResult with
-        | Some r -> Some (Seq.length x - Seq.length r)
-        | None -> None
+        maybe {
+            let! parseResult = parseAll stringLiteral (Seq.toList x)
+            return (Seq.length x - Seq.length parseResult)
+        }
     let addOption o1 o2 =
-        match (o1, o2) with
-        | (Some x, Some y) -> Some (x + y)
-        | _ -> None
+        maybe {
+            let! x = o1
+            let! y = o2
+            return x + y
+        }
     lines
     |> Seq.map getDifference
     |> Seq.fold addOption (Some 0)
