@@ -16,26 +16,48 @@ let digit = matches (fun c -> c >= '0' && c <= '9')
 let hexLetter = matches (fun c -> c >= 'a' && c <= 'f')
 let hexDigit = digit <|> hexLetter
 let quote = single '\"'
-let escapeQuote = quote >>= (fun _ -> result Quote)
+let escapeQuote =
+    parser {
+        let! _ = quote
+        return Quote
+    }
 let backslash = single '\\'
-let escapeBackslash = backslash >>= (fun _ -> result Backslash)
+let escapeBackslash =
+    parser {
+        let! _ = backslash
+        return Backslash
+    }
 let escapeHex =
-    single 'x' >>= (fun _ ->
-    hexDigit >>= (fun d1 ->
-    hexDigit >>= (fun d2 ->
-    result (Hex (d1, d2)))))
+    parser {
+        let! _ = single 'x'
+        let! d1 = hexDigit
+        let! d2 = hexDigit
+        return Hex (d1, d2)
+    }
 let escape =
-    backslash >>= (fun _ ->
-    escapeBackslash <|> escapeQuote <|> escapeHex)
+    parser {
+        let! _ = backslash
+        return! escapeBackslash <|> escapeQuote <|> escapeHex
+    }
 let notQuote = matches ((<>) '\"')
-let literalChar = notQuote >>= (Char >> result)
-let literalEscaped = escape >>= (Escaped >> result)
+let literalChar =
+    parser {
+        let! c = notQuote
+        return Char c
+    }
+let literalEscaped =
+    parser {
+        let! x = escape
+        return Escaped x
+    }
 let literal = literalEscaped <|> literalChar
 let stringLiteral =
-    quote >>= (fun _ ->
-    many literal >>= (fun x ->
-    quote >>= (fun _ ->
-    result x)))
+    parser {
+        let! _ = quote
+        let! x = many literal
+        let! _ = quote
+        return x
+    }
 
 let lines = System.IO.File.ReadAllLines "Day08Input.txt"
 let answer =
