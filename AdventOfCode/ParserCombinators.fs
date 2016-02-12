@@ -1,15 +1,19 @@
 ﻿module ParserCombinators
 
+open MaybeExpression
+
 let consume =
     function
     | [] -> None
     | x :: xs -> Some (x, xs)
-let result x = fun input -> Some (x, input)
+let result x input = maybe { return (x, input) }
 let fail = fun _ -> None
 let (>>=) parser f input =
-    parser input |> Option.bind (fun (x', input') ->
-    f x' input' |> Option.bind (fun (x'', input'') ->
-    Some (x'', input'')))
+    maybe {
+        let! (x', input') = parser input
+        let! (x'', input'') = f x' input'
+        return (x'', input'')
+    }
 let matches p = consume >>= (fun x -> if p x then result x else fail)
 let single c = matches ((=) c)
 let (<|>) parser1 parser2 input =

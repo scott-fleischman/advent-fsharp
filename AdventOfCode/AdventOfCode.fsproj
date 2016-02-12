@@ -56,6 +56,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <None Include="App.config" />
+    <Compile Include="MaybeExpression.fs" />
     <Compile Include="ParserCombinators.fs" />
     <Compile Include="Utility.fs" />
     <Compile Include="Day05.fs" />
