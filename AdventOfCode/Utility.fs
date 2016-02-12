@@ -6,5 +6,4 @@ let andAll predicates =
     constFunction
     >> Seq.initInfinite
     >> Seq.zip predicates
-    >> Seq.exists (function | (p, x) -> not (p x))
-    >> not
+    >> Seq.forall (fun (p, x) -> p x)
