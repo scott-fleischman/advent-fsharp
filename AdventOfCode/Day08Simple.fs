@@ -2,10 +2,8 @@
 
 let lines = System.IO.File.ReadAllLines "Day08Input.txt"
 
-let isHexDigit x =
-    (x >= 'a' && x <= 'f')
-    || (x >= 'A' && x <= 'F')
-    || (x >= '0' && x <= '9')
+let hexDigits = set <| ['a'..'f'] @ ['A'..'F'] @ ['0'..'9']
+let isHexDigit x = Set.contains x hexDigits
 
 let count s =
     let s' = s |> Seq.skip 1 |> Seq.toList
