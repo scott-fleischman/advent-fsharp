@@ -1,14 +1,30 @@
 ﻿module Day07
 
 open ParserCombinators
+open ParserCommon
 
-let build a b c = (a, b, c)
+type Wire = Wire of string
+type Signal = Signal of uint16
+type Connection =
+    | Direct of Signal
+    | BitwiseComplement of Wire
+    | BitwiseAnd of Wire * Wire
+    | BitwiseOr of Wire * Wire
+    | LeftShift of Wire * Signal
+    | RightShift of Wire * Signal
+type Gate = Gate of Connection * Wire
 
-let digit = matches (fun x -> x >= '0' && x <= '9')
-let letter = matches (fun x -> x >= 'a' && x <= 'z')
-let test1 = build <@> digit <*> letter <*> letter
+let wire = Wire <@> letters
+let signal = (fun n -> Signal (uint16 n)) <@> number
+let direct = Direct <@> signal
+let bitwiseComplement = BitwiseComplement <@> (string "NOT" *> spaces *> wire)
+let connection = direct <|> bitwiseComplement
+let gate =
+    (fun x y -> Gate (x, y))
+    <@> (connection <* spaces)
+    <*> (string "->" *> spaces *> wire)
 
 let answer =
-    "4ab"
+    "1900 -> x"
     |> Seq.toList
-    |> parseAll test1
+    |> parseAll gate

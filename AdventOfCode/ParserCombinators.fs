@@ -27,6 +27,14 @@ let matches p =
         return! if p x then result x else fail
     }
 
+let failOnNone x =
+    parser {
+        return!
+            match x with
+            | Some y -> result y
+            | None -> fail
+    }
+
 let single c = matches ((=) c)
 
 let (<|>) parser1 parser2 input =
@@ -76,6 +84,22 @@ let many1 p =
         let! xs = many p
         return (x :: xs)
     }
+
+let string s =
+    let rec aux =
+        function
+        | [] -> result []
+        | (x :: xs) ->
+            parser {
+                let! c = consume
+                if c = x
+                then
+                    let! xs = aux xs
+                    return! result (x :: xs)
+                else
+                    return! fail
+            }
+    aux (s |> Seq.toList)
 
 let parseAll parser input =
     match parser input with

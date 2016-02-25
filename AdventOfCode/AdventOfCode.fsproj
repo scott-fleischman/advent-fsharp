@@ -57,6 +57,7 @@
     <None Include="App.config" />
     <Compile Include="MaybeExpression.fs" />
     <Compile Include="ParserCombinators.fs" />
+    <Compile Include="ParserCommon.fs" />
     <Compile Include="Utility.fs" />
     <Compile Include="Day05.fs" />
     <Content Include="Day05Input.txt">
