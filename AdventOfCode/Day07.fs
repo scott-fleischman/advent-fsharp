@@ -14,17 +14,28 @@ type Connection =
     | RightShift of Wire * Signal
 type Gate = Gate of Connection * Wire
 
+let unary cons op x =
+    cons
+    <@> (string op *> spaces *> x)
+let curry f x y = f (x, y)
+let binary cons left op right =
+    curry cons
+    <@> (left <* spaces <* string op <* spaces)
+    <*> right
+
 let wire = Wire <@> letters
 let signal = (fun n -> Signal (uint16 n)) <@> number
+
 let direct = Direct <@> signal
-let bitwiseComplement = BitwiseComplement <@> (string "NOT" *> spaces *> wire)
-let connection = direct <|> bitwiseComplement
-let gate =
-    (fun x y -> Gate (x, y))
-    <@> (connection <* spaces)
-    <*> (string "->" *> spaces *> wire)
+let bitwiseComplement = unary BitwiseComplement "NOT" wire
+let bitwiseAnd = binary BitwiseAnd wire "AND" wire
+let bitwiseOr = binary BitwiseOr wire "OR" wire
+let leftShift = binary LeftShift wire "LSHIFT" signal
+let rightShift = binary RightShift wire "RSHIFT" signal
+let connection = direct <|> bitwiseComplement <|> bitwiseAnd <|> bitwiseOr <|> leftShift <|> rightShift
+let gate = binary Gate connection "->" wire
 
 let answer =
-    "1900 -> x"
+    "x LSHIFT 2 -> c"
     |> Seq.toList
     |> parseAll gate
