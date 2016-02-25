@@ -49,9 +49,38 @@ let sequence xs =
         Some (y :: ys)))
     Seq.fold aux (Some []) xs
 
+module SignalOps =
+    let unary f (Signal x) = Signal (f x)
+    let binary f (Signal x) (Signal y) = Signal (f x y)
+    let bitwiseComplement = unary (~~~)
+    let bitwiseOr = binary (|||)
+    let bitwiseAnd = binary (&&&)
+    let leftShift = binary (fun x y -> x <<< int32 y)
+    let rightShift = binary (fun x y -> x >>> int32 y)
+
+let getGateValue w gs =
+    let wireMap =
+        gs
+        |> Seq.map (fun (Gate (c, w)) -> (w, c))
+        |> Map.ofSeq
+    let rec runInput =
+        function
+        | SignalInput s -> s
+        | WireInput w -> runConnection wireMap.[w]
+    and runConnection =
+        function
+        | Direct x -> runInput x
+        | BitwiseComplement x -> SignalOps.bitwiseComplement (runInput x)
+        | BitwiseAnd (x1, x2) -> SignalOps.bitwiseAnd (runInput x1) (runInput x2)
+        | BitwiseOr (x1, x2) -> SignalOps.bitwiseOr (runInput x1) (runInput x2)
+        | LeftShift (x1, s2) -> SignalOps.leftShift (runInput x1) s2
+        | RightShift (x1, s2) -> SignalOps.rightShift (runInput x1) s2
+    runInput (WireInput w)
+
 let parsedGates =
     System.IO.File.ReadAllLines "Day07Input.txt"
-    |> Seq.map (fun x -> (x, x |> Seq.toList |> parseAll gate))
-    |> Seq.where (snd >> Option.isNone)
+    |> Seq.map (Seq.toList >> parseAll gate)
+    |> sequence
+    |> Option.map (getGateValue (Wire "g"))
 
 let answer = parsedGates
