@@ -35,6 +35,33 @@ let (<|>) parser1 parser2 input =
     | Some _ -> option1
     | None -> parser2 input
 
+let ( *> ) p1 p2 =
+    parser {
+        let! _ = p1
+        let! r2 = p2
+        return r2
+    }
+
+let ( <* ) p1 p2 =
+    parser {
+        let! r1 = p1
+        let! _ = p2
+        return r1
+    }
+
+let ( <@> ) f p =
+    parser {
+        let! r = p
+        return (f r)
+    }
+
+let (<*>) pf p2 =
+    parser {
+        let! f = pf
+        let! r = p2
+        return (f r)
+    }
+
 let rec many p =
     parser {
         let! x = p
