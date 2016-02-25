@@ -65,7 +65,9 @@
     </Content>
     <Compile Include="Day05Part2.fs" />
     <Compile Include="Day07.fs" />
-    <Content Include="Day07Input.txt" />
+    <Content Include="Day07Input.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Compile Include="Day08.fs" />
     <Compile Include="Day08Simple.fs" />
     <Content Include="Day08Input.txt">
