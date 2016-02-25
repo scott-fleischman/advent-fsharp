@@ -63,24 +63,39 @@ let getGateValue w gs =
         gs
         |> Seq.map (fun (Gate (c, w)) -> (w, c))
         |> Map.ofSeq
-    let rec runInput =
+    let cachedLookup m w f =
+        match Map.tryFind w m with
+        | Some x -> (m, x)
+        | None ->
+            let result = f w
+            (Map.add w result m, result)
+    let rec runInput m =
         function
-        | SignalInput s -> s
-        | WireInput w -> runConnection wireMap.[w]
-    and runConnection =
-        function
-        | Direct x -> runInput x
-        | BitwiseComplement x -> SignalOps.bitwiseComplement (runInput x)
-        | BitwiseAnd (x1, x2) -> SignalOps.bitwiseAnd (runInput x1) (runInput x2)
-        | BitwiseOr (x1, x2) -> SignalOps.bitwiseOr (runInput x1) (runInput x2)
-        | LeftShift (x1, s2) -> SignalOps.leftShift (runInput x1) s2
-        | RightShift (x1, s2) -> SignalOps.rightShift (runInput x1) s2
-    runInput (WireInput w)
+        | SignalInput s -> (m, s)
+        | WireInput w ->
+            cachedLookup m w (fun x -> runConnection m wireMap.[x] |> snd)
+    and cachedUnary m f x =
+        match runInput m x with
+        | (m', r) -> (m', f r)
+    and cachedBinary m x f y =
+        match runInput m x with
+        | (m', x') ->
+            match runInput m' y with
+            | (m'', y') -> (m'', f x' y')
+    and runConnection m c =
+        match c with
+        | Direct x -> runInput m x
+        | BitwiseComplement x -> cachedUnary m SignalOps.bitwiseComplement x
+        | BitwiseAnd (x1, x2) -> cachedBinary m x1 SignalOps.bitwiseAnd x2
+        | BitwiseOr (x1, x2) -> cachedBinary m x1 SignalOps.bitwiseOr x2
+        | LeftShift (x1, s2) -> cachedUnary m (fun x -> SignalOps.leftShift x s2) x1
+        | RightShift (x1, s2) -> cachedUnary m (fun x -> SignalOps.rightShift x s2) x1
+    runInput Map.empty (WireInput w) |> snd
 
 let parsedGates =
     System.IO.File.ReadAllLines "Day07Input.txt"
     |> Seq.map (Seq.toList >> parseAll gate)
     |> sequence
-    |> Option.map (getGateValue (Wire "g"))
+    |> Option.map (getGateValue (Wire "a"))
 
 let answer = parsedGates
