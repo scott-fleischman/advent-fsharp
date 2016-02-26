@@ -91,16 +91,12 @@ let makeWireMap =
 
 let isReducible =
     function
-    | Direct (SignalInput _) -> true
-    | _ -> false
+    | Direct (SignalInput _) -> false
+    | _ -> true
 
 let rec reduceAll m =
     if Map.exists (fun _ v -> isReducible v) m
-    then
-        let m' = Map.map (reduce m) m
-        if m' = m
-        then m
-        else reduceAll m'
+    then reduceAll (Map.map (reduce m) m)
     else m
 
 let getGateValues = makeWireMap >> reduceAll
