@@ -99,13 +99,20 @@ let rec reduceAll m =
     then reduceAll (Map.map (reduce m) m)
     else m
 
-let getGateValues = makeWireMap >> reduceAll
+let getGateValues gs =
+    let wireMap = makeWireMap gs
+    let first = reduceAll wireMap
+
+    let modifiedMap = Map.add (Wire "b") (Direct (SignalInput (Signal 3176us))) wireMap
+    let second = reduceAll modifiedMap
+
+    let f = Map.tryFind (Wire "a")
+    (f first, f second)
 
 let parsedGates =
     System.IO.File.ReadAllLines "Day07Input.txt"
     |> Seq.map (Seq.toList >> parseAll gate)
     |> sequence
     |> Option.map getGateValues
-    |> Option.bind (Map.tryFind (Wire "a"))
 
 let answer = parsedGates
