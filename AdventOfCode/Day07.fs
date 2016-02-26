@@ -1,5 +1,6 @@
 ﻿module Day07
 
+open MaybeExpression
 open ParserCombinators
 open ParserCommon
 
@@ -99,20 +100,24 @@ let rec reduceAll m =
     then reduceAll (Map.map (reduce m) m)
     else m
 
-let getGateValues gs =
+let getAnswers gs =
     let wireMap = makeWireMap gs
     let first = reduceAll wireMap
+    let findA = Map.tryFind (Wire "a")
+    let firstA = findA first
 
-    let modifiedMap = Map.add (Wire "b") (Direct (SignalInput (Signal 3176us))) wireMap
-    let second = reduceAll modifiedMap
+    let secondA =
+        maybe {
+            let! firstAValue = firstA
+            let modifiedMap = Map.add (Wire "b") firstAValue wireMap
+            let second = reduceAll modifiedMap
+            return! findA second
+        }
 
-    let f = Map.tryFind (Wire "a")
-    (f first, f second)
+    (firstA, secondA)
 
-let parsedGates =
+let answer =
     System.IO.File.ReadAllLines "Day07Input.txt"
     |> Seq.map (Seq.toList >> parseAll gate)
     |> sequence
-    |> Option.map getGateValues
-
-let answer = parsedGates
+    |> Option.map getAnswers
