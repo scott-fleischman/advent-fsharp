@@ -25,9 +25,3 @@ let letter = matches System.Char.IsLetter
 let letters =
     let toString cs = cs |> Seq.toArray |> System.String
     toString <@> many1 letter
-let letterString s =
-    let check =
-        function
-        | s' when s' = s -> Some s
-        | _ -> None
-    check <@> letters
