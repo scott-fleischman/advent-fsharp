@@ -6,8 +6,8 @@ open ParserCommon
 type Wire = Wire of string
 type Signal = Signal of uint16
 type Input =
-    | WireInput of Wire
     | SignalInput of Signal
+    | WireInput of Wire
 type Connection =
     | Direct of Input
     | BitwiseComplement of Input
@@ -58,44 +58,58 @@ module SignalOps =
     let leftShift = binary (fun x y -> x <<< int32 y)
     let rightShift = binary (fun x y -> x >>> int32 y)
 
-let getGateValue w gs =
-    let wireMap =
-        gs
-        |> Seq.map (fun (Gate (c, w)) -> (w, c))
-        |> Map.ofSeq
-    let cachedLookup m w f =
-        match Map.tryFind w m with
-        | Some x -> (m, x)
-        | None ->
-            let result = f w
-            (Map.add w result m, result)
-    let rec runInput m =
-        function
-        | SignalInput s -> (m, s)
+let reduce m _ c =
+    let reduceInput input =
+        match input with
+        | SignalInput _ -> input
         | WireInput w ->
-            cachedLookup m w (fun x -> runConnection m wireMap.[x] |> snd)
-    and cachedUnary m f x =
-        match runInput m x with
-        | (m', r) -> (m', f r)
-    and cachedBinary m x f y =
-        match runInput m x with
-        | (m', x') ->
-            match runInput m' y with
-            | (m'', y') -> (m'', f x' y')
-    and runConnection m c =
-        match c with
-        | Direct x -> runInput m x
-        | BitwiseComplement x -> cachedUnary m SignalOps.bitwiseComplement x
-        | BitwiseAnd (x1, x2) -> cachedBinary m x1 SignalOps.bitwiseAnd x2
-        | BitwiseOr (x1, x2) -> cachedBinary m x1 SignalOps.bitwiseOr x2
-        | LeftShift (x1, s2) -> cachedUnary m (fun x -> SignalOps.leftShift x s2) x1
-        | RightShift (x1, s2) -> cachedUnary m (fun x -> SignalOps.rightShift x s2) x1
-    runInput Map.empty (WireInput w) |> snd
+            match Map.tryFind w m with
+            | Some (Direct (SignalInput s)) -> SignalInput s
+            | Some _ | None -> input
+
+    let reduceUnary cons f i =
+        match reduceInput i with
+        | SignalInput s -> f s |> SignalInput |> Direct
+        | WireInput _ as i' -> cons i'
+
+    let reduceBinary cons f i1 i2 =
+        match (reduceInput i1, reduceInput i2) with
+        | (SignalInput s1, SignalInput s2) -> f s1 s2 |> SignalInput |> Direct
+        | (i1', i2') -> cons (i1', i2')
+
+    match c with
+    | Direct i -> Direct (reduceInput i)
+    | BitwiseComplement x -> reduceUnary BitwiseComplement SignalOps.bitwiseComplement x
+    | BitwiseAnd (x1, x2) -> reduceBinary BitwiseAnd SignalOps.bitwiseAnd x1 x2
+    | BitwiseOr (x1, x2) -> reduceBinary BitwiseOr SignalOps.bitwiseOr x1 x2
+    | LeftShift (x1, s2) -> reduceUnary (fun x -> LeftShift (x, s2)) (fun x -> SignalOps.leftShift x s2) x1
+    | RightShift (x1, s2) -> reduceUnary (fun x -> RightShift (x, s2)) (fun x -> SignalOps.rightShift x s2) x1
+
+let makeWireMap =
+    List.map (fun (Gate (c, w)) -> (w, c))
+    >> Map.ofSeq
+
+let isReducible =
+    function
+    | Direct (SignalInput _) -> true
+    | _ -> false
+
+let rec reduceAll m =
+    if Map.exists (fun _ v -> isReducible v) m
+    then
+        let m' = Map.map (reduce m) m
+        if m' = m
+        then m
+        else reduceAll m'
+    else m
+
+let getGateValues = makeWireMap >> reduceAll
 
 let parsedGates =
     System.IO.File.ReadAllLines "Day07Input.txt"
     |> Seq.map (Seq.toList >> parseAll gate)
     |> sequence
-    |> Option.map (getGateValue (Wire "a"))
+    |> Option.map getGateValues
+    |> Option.bind (Map.tryFind (Wire "a"))
 
 let answer = parsedGates
