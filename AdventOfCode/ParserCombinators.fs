@@ -11,8 +11,7 @@ let fail = fun _ -> None
 let (>>=) parser f input =
     maybe {
         let! (x', input') = parser input
-        let! (x'', input'') = f x' input'
-        return (x'', input'')
+        return! f x' input'
     }
 
 type ParserBuilder() =
